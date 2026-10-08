@@ -48,30 +48,46 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const house = id => HOUSES.find(h => h.id === id);
 
-/* ===== SEMANA: cierra cada viernes a las 4:00 p. m. ===== */
-function weekStart(now = new Date()) {
-  const c = new Date(now);
-  c.setDate(c.getDate() - ((c.getDay() - 5 + 7) % 7));
-  c.setHours(16, 0, 0, 0);
-  if (c > now) c.setDate(c.getDate() - 7);
-  return c;
+/* ===== SEMANA: abre el lunes a las 6:00 a. m. y cierra el viernes a las 4:00 p. m. ===== */
+function weekStart(now = new Date()) {            // lunes 6:00 a. m. de la semana en curso
+  const d = new Date(now);
+  d.setHours(6, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  if (d > now) d.setDate(d.getDate() - 7);        // lunes antes de las 6 a. m.: aún cuenta la semana cerrada
+  return d;
 }
-function weekEnd() { const e = weekStart(); e.setDate(e.getDate() + 7); return e; }
+function weekEnd(now = new Date()) {              // viernes 4:00 p. m. de esa misma semana
+  const e = weekStart(now);
+  e.setDate(e.getDate() + 4);
+  e.setHours(16, 0, 0, 0);
+  return e;
+}
+const isClosed = (now = new Date()) => now >= weekEnd(now);   // desde el viernes 4 p. m. hasta el lunes 6 a. m.
 const fmtLong = d => d.toLocaleString('es-PE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: 'numeric', minute: '2-digit', hour12: true });
+const fmtDay = d => d.toLocaleDateString('es-PE', { weekday: 'short', day: '2-digit', month: '2-digit' });
 function renderWeek() {
-  const now = new Date(), friday = now.getDay() === 5 && now.getHours() < 16;
+  const now = new Date(), closed = isClosed(now), friday = now.getDay() === 5 && !closed;
   const w = $('week');
-  w.className = 'week' + (friday ? ' alert' : '');
-  w.innerHTML = `<b>Semana actual:</b> ${fmtLong(weekStart())} a ${fmtLong(weekEnd())}.<br>` +
-    (friday ? '<b>Hoy a las 4:00 p. m. los puntos vuelven a cero.</b> Descarga el Excel antes de esa hora.'
-            : 'Los puntos se reinician a cero cada viernes a las 4:00 p. m.');
+  w.className = 'week' + (closed || friday ? ' alert' : '');
+  if (closed) {
+    const next = weekStart(); next.setDate(next.getDate() + 7);
+    w.innerHTML = `<b>Semana cerrada.</b> Los puntos están en cero y el registro se reabre el ${fmtLong(next)}. Aún puedes descargar el Excel de la semana que terminó.`;
+  } else {
+    w.innerHTML = `<b>Semana actual:</b> ${fmtLong(weekStart())} al ${fmtLong(weekEnd())}.<br>` +
+      (friday ? '<b>Hoy a las 4:00 p. m. se cierra la semana y los puntos vuelven a cero.</b> Descarga el Excel antes de esa hora.'
+              : 'Se registra de lunes 6:00 a. m. a viernes 4:00 p. m. Los puntos se reinician a cero el viernes a las 4:00 p. m.');
+  }
+  $('btnSave').disabled = closed;
+  $('btnExcel').hidden = closed;
   $('btnPrev').hidden = !prevRecs().length;
-  $('btnReset').hidden = !isAdmin();
+  $('btnPrev').textContent = closed ? 'Descargar Excel de la semana que terminó' : 'Descargar Excel de la semana anterior';
+  $('btnReset').hidden = !isAdmin() || closed;
 }
 
 let state = { type: 'favor', level: 1, user: null };
-const getRecs = () => ALL.filter(x => x.ts >= weekStart().getTime());
-const prevRecs = () => ALL.filter(x => x.ts < weekStart().getTime());
+const weekRecs = () => ALL.filter(x => x.ts >= weekStart().getTime() && x.ts < weekEnd().getTime());
+const getRecs = () => isClosed() ? [] : weekRecs();                                   // fin de semana: todo en cero
+const prevRecs = () => isClosed() ? weekRecs() : ALL.filter(x => x.ts < weekStart().getTime());
 const isAdmin = () => state.user && state.user.rol === 'admin';
 
 /* ===== ESCUDOS ===== */
@@ -85,7 +101,7 @@ function shieldSVG(h) {
 }
 function showShield() {
   const h = house($('house').value), box = $('shield');
-  // Intenta usar la imagen real (carpeta img/); si no existe, usa el escudo dibujado.
+  // Intenta usar la imagen real (carpeta jpg/); si no existe, usa el escudo dibujado.
   const im = new Image();
   im.alt = 'Escudo ' + h.name;
   im.onload = () => { box.innerHTML = ''; box.appendChild(im); };
@@ -195,6 +211,7 @@ document.querySelectorAll('#levels button').forEach(b => b.onclick = () => {
 
 $('btnSave').onclick = () => {
   const m = $('saveMsg'); m.className = 'msg';
+  if (isClosed()) { m.className = 'msg err'; m.textContent = 'La semana está cerrada. El registro se reabre el lunes a las 6:00 a. m.'; return; }
   const num = id => Math.max(0, Math.floor(+$(id).value || 0));
   const items = state.type === 'favor'
     ? [[CATS_FAVOR[0], num('f_gesto')], [CATS_FAVOR[1], $('f_const').checked ? 20 : 0],
@@ -215,7 +232,7 @@ $('btnSave').onclick = () => {
     $('note').value = '';
     m.textContent = `Registrado: ${valid.reduce((s, i) => s + i[1], 0)} puntos para ${house($('house').value).name}.`;
   }).catch(err => { m.className = 'msg err'; m.textContent = 'No se pudo guardar: ' + err.code; })
-    .finally(() => btn.disabled = false);
+    .finally(() => btn.disabled = isClosed());
 };
 
 /* ===== TABLAS Y GRÁFICO ===== */
@@ -295,7 +312,7 @@ function exportExcel(recs, name) {
   }))), 'Registros');
   XLSX.writeFile(wb, name);
 }
-const stamp = d => d.toISOString().slice(0, 10);
+const stamp = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 $('btnExcel').onclick = () => exportExcel(getRecs(), `Torneo_semana_${stamp(weekStart())}.xlsx`);
 $('btnPrev').onclick = () => { const a = prevRecs(); exportExcel(a, `Torneo_semana_anterior_${stamp(new Date(Math.min(...a.map(x => x.ts))))}.xlsx`); };
 $('btnReset').onclick = async () => {
@@ -311,4 +328,4 @@ $('btnReset').onclick = async () => {
 
 /* ===== INICIO ===== */
 fillRetos(); renderInfo(); showShield(); setTitle();
-setInterval(() => { if (state.user) renderAll(); }, 60000);   // al llegar el viernes 4:00 p. m. la vista pasa a cero sola
+setInterval(() => { if (state.user) renderAll(); }, 60000);   // el viernes 4:00 p. m. la vista pasa a cero y el lunes a las 6:00 a. m. se reabre sola
