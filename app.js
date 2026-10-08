@@ -1,9 +1,9 @@
 /* ===== DATOS BASE ===== */
 const HOUSES = [
-  { id: 'tagaste', name: 'Tagaste', color: '#E3A92B', text: '#fff', img: 'jpg/tagaste.jpg' },
-  { id: 'cartago', name: 'Cartago', color: '#C4262E', text: '#fff', img: 'jpg/cartago.jpg' },
-  { id: 'hipona',  name: 'Hipona',  color: '#FFFFFF', text: '#1E3A66', img: 'jpg/hipona.jpg' },
-  { id: 'milan',   name: 'Milán',   color: '#1E3F73', text: '#fff', img: 'jpg/milan.jpg' }
+  { id: 'tagaste', name: 'Tagaste', color: '#E3A92B', text: '#fff', img: 'jpg/tagaste.JPG' },
+  { id: 'cartago', name: 'Cartago', color: '#C4262E', text: '#fff', img: 'jpg/cartago.JPG' },
+  { id: 'hipona',  name: 'Hipona',  color: '#FFFFFF', text: '#1E3A66', img: 'jpg/hipona.JPG' },
+  { id: 'milan',   name: 'Milán',   color: '#1E3F73', text: '#fff', img: 'jpg/milan.JPG' }
 ];
 const RETOS = [
   'Me expreso y comparto respetando la dignidad de los demás',
