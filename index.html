@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Etiqueta interna de autor agregada aquí -->
+<meta name="author" content="Marx Lenin Galán Galán">
+<title>Torneo de los Corazones Inquietos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <h1>Torneo de los Corazones Inquietos</h1>
+  <div id="userBar" hidden>
+    <span id="userName"></span>
+    <button id="btnLogout" class="link">Salir</button>
+  </div>
+</header>
+
+<!-- ACCESO -->
+<section id="auth" class="wrap">
+  <div class="card">
+    <div class="seg" id="authTabs">
+      <button class="on" data-t="login">Ingresar</button>
+      <button data-t="register">Crear acceso</button>
+    </div>
+    <form id="loginForm" autocomplete="off">
+      <label>Usuario<input id="lUser" required autocapitalize="none"></label>
+      <label>Contraseña<input id="lPass" type="password" required></label>
+      <button class="primary">Ingresar</button>
+    </form>
+    <form id="regForm" hidden autocomplete="off">
+      <label>Nombre del docente<input id="rName" required></label>
+      <label>Usuario<input id="rUser" required autocapitalize="none"></label>
+      <label>Contraseña (mínimo 6 caracteres)<input id="rPass" type="password" minlength="6" required></label>
+      <label>Código de acceso del colegio<input id="rCode" required autocomplete="off"></label>
+      <button class="primary">Crear acceso</button>
+      <p class="hint">Pide el código de acceso al coordinador del torneo.</p>
+    </form>
+    <p class="msg" id="authMsg" role="alert"></p>
+  </div>
+</section>
+
+<!-- APLICACIÓN -->
+<main id="app" class="wrap" hidden>
+
+  <div class="week" id="week"></div>
+
+  <div class="card">
+    <label>Seleccionar el nombre de la casa
+      <select id="house"></select>
+    </label>
+    <div class="shieldBox"><div id="shield"></div></div>
+  </div>
+
+  <div class="seg big" id="typeTabs">
+    <button class="on" data-t="favor">Puntos a favor</button>
+    <button data-t="contra">Puntos en contra</button>
+  </div>
+
+  <div class="card">
+    <h2 id="formTitle"></h2>
+
+    <p class="lbl">Niveles</p>
+    <div class="seg" id="levels">
+      <button class="on" data-n="1">Nivel 1</button>
+      <button data-n="2">Nivel 2</button>
+      <button data-n="3">Nivel 3</button>
+    </div>
+    <label>Reto diario relacionado
+      <select id="reto"></select>
+    </label>
+
+    <div id="fieldsFavor" class="fields">
+      <label>Gesto puntual<input type="number" min="0" inputmode="numeric" id="f_gesto" placeholder="0"></label>
+      <label class="check"><input type="checkbox" id="f_const"> Constancia <b>+20</b></label>
+      <label class="check"><input type="checkbox" id="f_ejemplo"> Ejemplo para otros <b>+50</b></label>
+      <label>Excepcional<input type="number" min="0" inputmode="numeric" id="f_exc" placeholder="0"></label>
+    </div>
+
+    <div id="fieldsContra" class="fields" hidden>
+      <label>Leve<input type="number" min="0" inputmode="numeric" id="c_leve" placeholder="0"></label>
+      <label>Moderada<input type="number" min="0" inputmode="numeric" id="c_mod" placeholder="0"></label>
+      <label>Grave<input type="number" min="0" inputmode="numeric" id="c_grave" placeholder="0"></label>
+      <label>Reincidencia<input type="number" min="0" inputmode="numeric" id="c_reinc" placeholder="0"></label>
+    </div>
+
+    <label>Observación (opcional)<input id="note" maxlength="120"></label>
+    <button class="primary" id="btnSave">Registrar puntos</button>
+    <p class="msg" id="saveMsg" role="status"></p>
+  </div>
+
+  <div class="card">
+    <h2>Puntos acumulados</h2>
+    <svg id="chart" viewBox="0 0 340 235" role="img" aria-label="Gráfico de puntos por casa"></svg>
+    <div class="legend"><span class="dot fav"></span>A favor <span class="dot con"></span>En contra</div>
+    <div class="scroll"><table id="tSummary"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Puntos por categoría</h2>
+    <div class="scroll"><table id="tCats"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Registros</h2>
+    <div class="scroll"><table id="tRecords"></table></div>
+    <div class="btns">
+      <button class="primary" id="btnExcel">Descargar Excel de esta semana</button>
+      <button class="secondary" id="btnPrev" hidden>Descargar Excel de la semana anterior</button>
+      <button class="danger" id="btnReset" hidden>Reiniciar puntos a cero</button>
+    </div>
+  </div>
+
+  <div class="card info">
+    <h2>Retos diarios de un corazón inquieto</h2>
+    <p class="hint">Información para los docentes.</p>
+    <div id="retosInfo"></div>
+  </div>
+</main>
+
+<!-- Pie de página visible agregado aquí -->
+<footer style="text-align: center; padding: 20px; margin-top: 20px; font-family: 'Nunito Sans', sans-serif; background-color: #5b8a9e; color: white;">
+  <p>web site creada por <strong>Marx Lenin Galán Galán</strong></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
